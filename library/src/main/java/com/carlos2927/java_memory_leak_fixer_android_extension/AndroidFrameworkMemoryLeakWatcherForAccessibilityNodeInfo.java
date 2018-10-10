@@ -21,6 +21,7 @@ import java.util.List;
  * 解决由android.view.accessibility.AccessibilityNodeInfo#sPool静态持有间接引用Context的变量引发的内存泄漏
  */
 public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implements Watchable {
+    public static final int CompatAndroidSDK = Build.VERSION_CODES.JELLY_BEAN;
     Class cls;
     Class cls_Editor$UndoInputFilter;
     Class cls_Editor;
