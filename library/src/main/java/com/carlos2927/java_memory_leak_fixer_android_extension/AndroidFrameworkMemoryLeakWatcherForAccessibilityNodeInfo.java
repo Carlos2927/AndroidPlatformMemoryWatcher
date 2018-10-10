@@ -1,6 +1,7 @@
 package com.carlos2927.java_memory_leak_fixer_android_extension;
 
 import android.app.Activity;
+import android.os.Build;
 import android.text.InputFilter;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -26,21 +27,25 @@ public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implement
     Class cls_TextView$ChangeWatcher;
     List<AccessibilityNodeInfo> accessibilityNodeInfoList = new ArrayList<>();
     private CharSequence getOriginalText(AccessibilityNodeInfo accessibilityNodeInfo){
-        Method method = JavaReflectUtils.getMethod(AccessibilityNodeInfo.class,"getOriginalText");
-        if(method != null){
-            try {
-                return (CharSequence) method.invoke(accessibilityNodeInfo);
-            }catch (Exception e){
-                e.printStackTrace();
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            Method method = JavaReflectUtils.getMethod(AccessibilityNodeInfo.class,"getOriginalText");
+            if(method != null){
+                try {
+                    return (CharSequence) method.invoke(accessibilityNodeInfo);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
-        }
-        Field field = JavaReflectUtils.getField(AccessibilityNodeInfo.class,"mOriginalText");
-        if(field != null){
-            try {
-                return (CharSequence) field.get(accessibilityNodeInfo);
-            } catch (Exception e) {
-                e.printStackTrace();
+            Field field = JavaReflectUtils.getField(AccessibilityNodeInfo.class,"mOriginalText");
+            if(field != null){
+                try {
+                    return (CharSequence) field.get(accessibilityNodeInfo);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+        }else {
+            return accessibilityNodeInfo.getText();
         }
         return null;
     }
@@ -61,31 +66,35 @@ public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implement
                     SpannableStringBuilder spannableStringBuilder = (SpannableStringBuilder) spanned;
                     InputFilter[] filters = spannableStringBuilder.getFilters();
                     if(filters != null){
-                        if(cls_Editor$UndoInputFilter == null){
-                            try {
-                                cls_Editor$UndoInputFilter = Class.forName("android.widget.Editor$UndoInputFilter");
-                                for(InputFilter inputFilter:filters){
-                                    if(cls_Editor$UndoInputFilter.isInstance(inputFilter)){
-                                        try {
-                                            Object mEditor = JavaReflectUtils.getField(cls_Editor$UndoInputFilter,"mEditor").get(inputFilter);
-                                            if(mEditor != null){
-                                                if(cls_Editor == null){
-                                                    cls_Editor = Class.forName("android.widget.Editor");
+                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
+                            if(cls_Editor$UndoInputFilter == null){
+                                try {
+                                    cls_Editor$UndoInputFilter = Class.forName("android.widget.Editor$UndoInputFilter");
+                                    for(InputFilter inputFilter:filters){
+                                        if(cls_Editor$UndoInputFilter.isInstance(inputFilter)){
+                                            try {
+                                                Object mEditor = JavaReflectUtils.getField(cls_Editor$UndoInputFilter,"mEditor").get(inputFilter);
+                                                if(mEditor != null){
+                                                    if(cls_Editor == null){
+                                                        cls_Editor = Class.forName("android.widget.Editor");
+                                                    }
+                                                    TextView textView = (TextView) JavaReflectUtils.getField(cls_Editor,"mTextView").get(mEditor);
+                                                    if(textView != null){
+                                                        activity = InnerClassHelper.getActivityFromContext(textView.getContext());
+                                                        break;
+                                                    }
                                                 }
-                                                TextView textView = (TextView) JavaReflectUtils.getField(cls_Editor,"mTextView").get(mEditor);
-                                                if(textView != null){
-                                                    activity = InnerClassHelper.getActivityFromContext(textView.getContext());
-                                                    break;
-                                                }
+                                            }catch (Exception e){
+                                                e.printStackTrace();
                                             }
-                                        }catch (Exception e){
-                                            e.printStackTrace();
                                         }
                                     }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
-                            } catch (Exception e) {
-                                e.printStackTrace();
                             }
+                        }else{
+                            // Can we should compat ICE_CREAM_SANDWICH(14) and ICE_CREAM_SANDWICH_MR1(15) now?
                         }
                     }
                     if(activity == null){
