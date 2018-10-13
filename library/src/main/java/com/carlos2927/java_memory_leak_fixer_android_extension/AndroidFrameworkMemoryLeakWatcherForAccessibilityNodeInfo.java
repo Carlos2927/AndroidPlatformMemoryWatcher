@@ -100,35 +100,9 @@ public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implement
                         }
                     }
                     if(activity == null){
-                        try {
-                            Object[] mSpans = (Object[]) JavaReflectUtils.getField(SpannableStringBuilder.class,"mSpans").get(spannableStringBuilder);
-                            if(cls_TextView$ChangeWatcher == null){
-                                cls_TextView$ChangeWatcher = Class.forName("android.widget.TextView$ChangeWatcher");
-                            }
-                            for(Object obj:mSpans){
-                                if(cls_TextView$ChangeWatcher.isInstance(obj)){
-                                    List<Field> fieldList = InnerClassHelper.getSyntheticFields(cls_TextView$ChangeWatcher);
-                                    if(fieldList != null){
-                                        for(Field field:fieldList){
-                                            field.setAccessible(true);
-                                            if(TextView.class.isInstance(field.get(obj))){
-                                                TextView textView = (TextView)field.get(obj);
-                                                activity = InnerClassHelper.getActivityFromContext(textView.getContext());
-                                                break;
-                                            }
-                                        }
-                                        if(activity != null){
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
+                        activity = checkSpannableStringBuilder_mSpans(spannableStringBuilder);
 
                     }
-
                     if(activity != null){
                         boolean isActivityDestroyed = InnerClassHelper.isActivityDestroyed(activity);
                         if(isActivityDestroyed){
@@ -141,8 +115,49 @@ public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implement
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
+        }else if(SpannableStringBuilder.class.isInstance(charSequence)){
+            Activity activity = checkSpannableStringBuilder_mSpans((SpannableStringBuilder) charSequence);
+            if(activity != null){
+                boolean isActivityDestroyed = InnerClassHelper.isActivityDestroyed(activity);
+                if(isActivityDestroyed){
+                    Log.i(AndroidPlatformMemoryWatcher.TAG,String.format("AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo  %s is destroyed,The AccessibilityNodeInfo that related this activity will invoke setText(null)",activity.toString()));
+                }
+                return isActivityDestroyed;
+            }
         }
         return false;
+    }
+
+    public Activity checkSpannableStringBuilder_mSpans(SpannableStringBuilder spannableStringBuilder){
+        try {
+            Object[] mSpans = (Object[]) JavaReflectUtils.getField(SpannableStringBuilder.class,"mSpans").get(spannableStringBuilder);
+            if(cls_TextView$ChangeWatcher == null){
+                cls_TextView$ChangeWatcher = Class.forName("android.widget.TextView$ChangeWatcher");
+            }
+            Activity activity = null;
+            for(Object obj:mSpans){
+                if(cls_TextView$ChangeWatcher.isInstance(obj)){
+                    List<Field> fieldList = InnerClassHelper.getSyntheticFields(cls_TextView$ChangeWatcher);
+                    if(fieldList != null){
+                        for(Field field:fieldList){
+                            field.setAccessible(true);
+                            Object target = field.get(obj);
+                            if(TextView.class.isInstance(target)){
+                                TextView textView = (TextView)target;
+                                activity = InnerClassHelper.getActivityFromContext(textView.getContext());
+                                break;
+                            }
+                        }
+                        if(activity != null){
+                            return activity;
+                        }
+                    }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
