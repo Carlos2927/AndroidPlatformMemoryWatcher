@@ -5,6 +5,7 @@ import android.os.Build;
 import android.text.InputFilter;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.TextView;
 
@@ -29,19 +30,19 @@ public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implement
     List<AccessibilityNodeInfo> accessibilityNodeInfoList = new ArrayList<>();
     private CharSequence getOriginalText(AccessibilityNodeInfo accessibilityNodeInfo){
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            Method method = JavaReflectUtils.getMethod(AccessibilityNodeInfo.class,"getOriginalText");
-            if(method != null){
-                try {
-                    return (CharSequence) method.invoke(accessibilityNodeInfo);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
             Field field = JavaReflectUtils.getField(AccessibilityNodeInfo.class,"mOriginalText");
             if(field != null){
                 try {
                     return (CharSequence) field.get(accessibilityNodeInfo);
                 } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            Method method = JavaReflectUtils.getMethod(AccessibilityNodeInfo.class,"getOriginalText");
+            if(method != null){
+                try {
+                    return (CharSequence) method.invoke(accessibilityNodeInfo);
+                }catch (Exception e){
                     e.printStackTrace();
                 }
             }
@@ -129,7 +130,11 @@ public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implement
                     }
 
                     if(activity != null){
-                        return InnerClassHelper.isActivityDestroyed(activity);
+                        boolean isActivityDestroyed = InnerClassHelper.isActivityDestroyed(activity);
+                        if(isActivityDestroyed){
+                            Log.i(AndroidPlatformMemoryWatcher.TAG,String.format("AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo  %s is destroyed,The AccessibilityNodeInfo that related this activity will invoke setText(null)",activity.toString()));
+                        }
+                        return isActivityDestroyed;
                     }
 
                 }

@@ -14,6 +14,7 @@ import java.util.Map;
  */
 @Keep
 public class AndroidPlatformMemoryWatcher {
+    static final String TAG = "AndroidMemoryWatcher";
     @Keep
     private static final Map<Class,Watchable> AndroidPlatformCache = new HashMap<>();
 
