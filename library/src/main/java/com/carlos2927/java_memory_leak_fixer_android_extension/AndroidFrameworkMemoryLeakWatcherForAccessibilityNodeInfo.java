@@ -11,7 +11,6 @@ import android.widget.TextView;
 
 import com.carlos2927.java.memoryleakfixer.InnerClassHelper;
 import com.carlos2927.java.memoryleakfixer.JavaReflectUtils;
-import com.carlos2927.java.memoryleakfixer.Watchable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,13 +20,25 @@ import java.util.List;
 /**
  * 解决由android.view.accessibility.AccessibilityNodeInfo#sPool静态持有间接引用Context的变量引发的内存泄漏
  */
-public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implements Watchable {
+public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo extends AndroidFrameworkStaticFiledWatcher {
     public static final int CompatAndroidSDK = Build.VERSION_CODES.JELLY_BEAN;
     Class cls;
     Class cls_Editor$UndoInputFilter;
     Class cls_Editor;
     Class cls_TextView$ChangeWatcher;
     List<AccessibilityNodeInfo> accessibilityNodeInfoList = new ArrayList<>();
+    private AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo(){
+
+    }
+    private static AndroidFrameworkStaticFiledWatcher Instance;
+    public static AndroidFrameworkStaticFiledWatcher getInstance(){
+        synchronized (AndroidFrameworkStaticFiledWatcher.class){
+            if(Instance == null){
+                Instance = new AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo();
+            }
+        }
+        return Instance;
+    }
     private CharSequence getOriginalText(AccessibilityNodeInfo accessibilityNodeInfo){
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             Field field = JavaReflectUtils.getField(AccessibilityNodeInfo.class,"mOriginalText");
@@ -162,6 +173,9 @@ public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo implement
 
     @Override
     public void watch() {
+        if(!checkNeedWatch()){
+            return;
+        }
         for(int i = 0;i<50;i++){
             AccessibilityNodeInfo accessibilityNodeInfo = AccessibilityNodeInfo.obtain();
             CharSequence charSequence = getOriginalText(accessibilityNodeInfo);

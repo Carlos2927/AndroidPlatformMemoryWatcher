@@ -28,7 +28,9 @@ public class AndroidPlatformMemoryWatcher {
 
     static {
         if(Build.VERSION.SDK_INT >= AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo.CompatAndroidSDK){
-            addWatcher(AccessibilityNodeInfo.class,new AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo());
+            addWatcher(AccessibilityNodeInfo.class,AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo.getInstance());
         }
+        addWatcher(AccessibilityNodeInfo.class,AndroidFrameworkMemoryLeakWatcherForAccessibilityManager.getInstance());
+        AndroidFrameworkMemoryLeakWatcherForAccessibilityManager.getInstance().watchOnlyOnce();
     }
 }
