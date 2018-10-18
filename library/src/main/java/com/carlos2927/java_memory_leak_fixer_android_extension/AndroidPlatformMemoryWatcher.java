@@ -2,6 +2,7 @@ package com.carlos2927.java_memory_leak_fixer_android_extension;
 
 import android.os.Build;
 import android.support.annotation.Keep;
+import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.carlos2927.java.memoryleakfixer.Watchable;
@@ -30,7 +31,7 @@ public class AndroidPlatformMemoryWatcher {
         if(Build.VERSION.SDK_INT >= AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo.CompatAndroidSDK){
             addWatcher(AccessibilityNodeInfo.class,AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo.getInstance());
         }
-        addWatcher(AccessibilityNodeInfo.class,AndroidFrameworkMemoryLeakWatcherForAccessibilityManager.getInstance());
+        addWatcher(AccessibilityManager.class,AndroidFrameworkMemoryLeakWatcherForAccessibilityManager.getInstance());
         AndroidFrameworkMemoryLeakWatcherForAccessibilityManager.getInstance().watchOnlyOnce();
     }
 }
