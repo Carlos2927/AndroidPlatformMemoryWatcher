@@ -58,7 +58,7 @@ public class AndroidFrameworkMemoryLeakWatcherForAccessibilityNodeInfo extends A
                 }
             }
 //            accessibilityNodeInfo.getText();
-            watchOnlyOnce(); // 在高版本系统中获取不到mOriginalText时就不再监测了
+            stopWatch(); // 在高版本系统中获取不到mOriginalText时就不再监测了
         }else {
             return accessibilityNodeInfo.getText();
         }

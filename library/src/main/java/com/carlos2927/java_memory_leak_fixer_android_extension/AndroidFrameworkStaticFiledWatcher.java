@@ -39,6 +39,10 @@ public abstract class AndroidFrameworkStaticFiledWatcher implements Watchable {
         mode = 1;
     }
 
+    public final void stopWatch(){
+        mode = -1;
+    }
+
 
 
 }
